@@ -3,9 +3,10 @@ class Note {
   final String title;
   final String description;
   final String photo_id;
-  final double price; // Измените тип на double
+  final double price; // Используем double для цены
   bool isFavorite;
 
+  // Конструктор с параметрами
   Note({
     required this.id,
     required this.title,
@@ -15,14 +16,14 @@ class Note {
     this.isFavorite = false,
   });
 
+  // Фабричный метод для создания объекта из JSON
   factory Note.fromJson(Map<String, dynamic> json) {
     return Note(
-      id: json['ID'],
-      title: json['Name'],
-      description: json['Description'],
-      price: json['Price'].toDouble(),
-      photo_id: json['ImageURL'], // Предполагаем, что API возвращает это поле
+      id: json['product_id'] ?? 0, // Если 'product_id' == null, присваиваем 0
+      title: json['name'] ?? 'Unknown', // Если 'name' == null, присваиваем 'Unknown'
+      description: json['description'] ?? '', // Если 'description' == null, присваиваем пустую строку
+      price: (json['price'] != null) ? json['price'].toDouble() : 0.0, // Если 'price' == null, присваиваем 0.0
+      photo_id: json['image_url'] ?? '', // Если 'imageURL' == null, присваиваем пустую строку
     );
   }
 }
-

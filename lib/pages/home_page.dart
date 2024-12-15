@@ -19,9 +19,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   List<Note> notes = [];
+  List<Note> filteredNotes = [];
   List<Note> favorites = [];
   List<CartItem> cart = [];
   final ApiService apiService = ApiService();
+  TextEditingController _searchController = TextEditingController();
+  TextEditingController _minPriceController = TextEditingController(); // Контроллер для минимальной цены
+  TextEditingController _maxPriceController = TextEditingController(); // Контроллер для максимальной цены
 
   @override
   void initState() {
@@ -34,6 +38,7 @@ class _HomePageState extends State<HomePage> {
       List<Note> products = await apiService.getProducts();
       setState(() {
         notes = products;
+        filteredNotes = products; // Изначально отображаем все товары
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -42,40 +47,61 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Фильтрация товаров по названию
+  void _filterNotes(String query) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final filtered = notes.where((note) {
+        return note.title.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+      setState(() {
+        filteredNotes = filtered;
+      });
+    });
+  }
+
+  // Фильтрация товаров по цене
+  void _filterByPrice() {
+    double? minPrice = double.tryParse(_minPriceController.text);
+    double? maxPrice = double.tryParse(_maxPriceController.text);
+
+    if (minPrice != null && maxPrice != null) {
+      setState(() {
+        filteredNotes = notes.where((note) {
+          return note.price >= minPrice && note.price <= maxPrice;
+        }).toList();
+      });
+    } else {
+      // Если цена введена неверно, показываем все товары
+      setState(() {
+        filteredNotes = notes;
+      });
+    }
+  }
+
+  // Сортировка товаров
+  void _sortNotes(String sortType) {
+    setState(() {
+      if (sortType == 'A-Z') {
+        filteredNotes.sort((a, b) => a.title.compareTo(b.title)); // От А до Я
+      } else if (sortType == 'Z-A') {
+        filteredNotes.sort((a, b) => b.title.compareTo(a.title)); // От Я до А
+      } else if (sortType == 'Price Low-High') {
+        filteredNotes.sort((a, b) => a.price.compareTo(b.price)); // По возрастанию цены
+      } else if (sortType == 'Price High-Low') {
+        filteredNotes.sort((a, b) => b.price.compareTo(a.price)); // По убыванию цены
+      }
+    });
+  }
+
+  // Добавление товара в список
   void _addNote(Note note) {
     setState(() {
       notes.add(note);
+      filteredNotes.add(note); // Добавляем в отфильтрованный список тоже
     });
   }
 
-  void _editNote(Note note) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditNotePage(
-          note: note,
-          onUpdate: (updatedNote) {
-            setState(() {
-              int index = notes.indexWhere((n) => n.id == updatedNote.id);
-              if (index != -1) {
-                notes[index] = updatedNote;
-              }
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  void _addToCart(Note note) {
-    setState(() {
-      cart.add(CartItem(note: note));
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${note.title} добавлен в корзину')),
-    );
-  }
-
+  // Открытие карточки товара
   void _openNote(Note note) {
     Navigator.push(
       context,
@@ -86,7 +112,8 @@ class _HomePageState extends State<HomePage> {
             setState(() {
               int index = notes.indexWhere((n) => n.id == updatedNote.id);
               if (index != -1) {
-                notes[index] = updatedNote; // Обновляем заметку
+                notes[index] = updatedNote;
+                filteredNotes[index] = updatedNote;
               }
             });
           },
@@ -95,13 +122,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Удаление товара из списка
   void _deleteNote(int id) {
     setState(() {
       notes.removeWhere((note) => note.id == id);
+      filteredNotes.removeWhere((note) => note.id == id);
     });
   }
 
-
+  // Переключение состояния избранного товара
   void _toggleFavorite(Note note) {
     setState(() {
       if (favorites.contains(note)) {
@@ -114,6 +143,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Удаление из избранных
   void _removeFromFavorites(Note note) {
     setState(() {
       favorites.remove(note);
@@ -121,6 +151,17 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Добавление товара в корзину
+  void _addToCart(Note note) {
+    setState(() {
+      cart.add(CartItem(note: note));
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${note.title} добавлен в корзину')),
+    );
+  }
+
+  // Обработка выбранного элемента в нижней панели
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -172,9 +213,66 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                showSearch(
+                  context: context,
+                  delegate: NoteSearchDelegate(_filterNotes),
+                );
+              },
+            ),
+          ),
+          PopupMenuButton<String>(
+            onSelected: _sortNotes,
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'A-Z', child: Text('От А до Я')),
+              const PopupMenuItem(value: 'Z-A', child: Text('От Я до А')),
+              const PopupMenuItem(value: 'Price Low-High', child: Text('По возрастанию цены')),
+              const PopupMenuItem(value: 'Price High-Low', child: Text('По убыванию цены')),
+            ],
+          ),
         ],
       ),
-      body: _getCurrentPage(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _minPriceController,
+                    decoration: InputDecoration(
+                      labelText: 'Минимальная цена',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _maxPriceController,
+                    decoration: InputDecoration(
+                      labelText: 'Максимальная цена',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.filter_list),
+                  onPressed: _filterByPrice,
+                ),
+              ],
+            ),
+          ),
+          Expanded(child: _getCurrentPage()),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -204,12 +302,12 @@ class _HomePageState extends State<HomePage> {
         crossAxisSpacing: 10.0,
         mainAxisSpacing: 10.0,
       ),
-      itemCount: notes.length,
+      itemCount: filteredNotes.length,
       itemBuilder: (context, index) {
-        final note = notes[index];
+        final note = filteredNotes[index];
         return NoteCard(
           note: note,
-          onTap: (note) => _openNote(note), // Исправлено: передаем note в _openNote
+          onTap: (note) => _openNote(note),
           onToggleFavorite: (note) {
             _toggleFavorite(note);
           },
@@ -218,5 +316,50 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+}
 
+class NoteSearchDelegate extends SearchDelegate {
+  final Function(String) onSearch;
+
+  NoteSearchDelegate(this.onSearch);
+
+  @override
+  String? get searchFieldLabel => 'Поиск по названию';
+
+  @override
+  TextInputAction get textInputAction => TextInputAction.search;
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+          onSearch(query);
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return Container();
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    onSearch(query);
+    return Container();
+  }
 }

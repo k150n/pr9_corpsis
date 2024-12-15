@@ -7,7 +7,7 @@ class ApiService {
 
   Future<List<Note>> getProducts() async {
     try {
-      final response = await _dio.get('http://193.160.209.233:8080/products');
+      final response = await _dio.get('http://localhost:8080/products');
       if (response.statusCode == 200) {
         List<Note> products = (response.data as List)
             .map((product) => Note.fromJson(product))
