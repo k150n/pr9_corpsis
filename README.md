@@ -1,16 +1,8 @@
-# pr9_corpsis
+# Гоман Кирилл ЭФБО-02-22
 
-A new Flutter project.
+![image](https://github.com/user-attachments/assets/c5f18d3b-7262-43a1-86cd-9767dc0a750b)
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+https://github.com/user-attachments/assets/2305bd46-af9e-4d85-8a68-6d856d735239
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
