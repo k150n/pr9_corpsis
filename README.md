@@ -1,16 +1,6 @@
-# pr9_corpsis
+# ПР12 Гоман Кирилл ЭФБО-02-22
 
-A new Flutter project.
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+![My-App-Google-Chrome-2024-12-15-17-55-47](https://github.com/user-attachments/assets/c9e1c9ec-fa93-4689-9b9b-b6d6244b407a)
